@@ -44,7 +44,7 @@ const formatPrice = (price: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
 
 export default async function ProductDetailPage({ params }: Props) {
-  await params // Next.js 15: params is a Promise
+  const { id: _id } = await params
   const product = MOCK_PRODUCT
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)

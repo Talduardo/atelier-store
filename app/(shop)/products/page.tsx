@@ -26,13 +26,14 @@ const SORT_OPTIONS = ['Relevância', 'Menor preço', 'Maior preço', 'Mais novos
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
 
-export default function ProductsPage({
+export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { categoria?: string; ordem?: string; q?: string }
+  searchParams: Promise<{ categoria?: string; ordem?: string; q?: string }>
 }) {
-  const activeCategory = searchParams.categoria || 'todos'
-  const activeSort = searchParams.ordem || 'Relevância'
+  const { categoria, ordem, q } = await searchParams
+  const activeCategory = categoria || 'todos'
+  const activeSort = ordem || 'Relevância'
 
   const filtered = activeCategory && activeCategory !== 'todos'
     ? MOCK_PRODUCTS.filter(p => p.category.toLowerCase() === activeCategory.toLowerCase())
@@ -67,7 +68,7 @@ export default function ProductsPage({
               <input
                 type="search"
                 placeholder="Buscar produtos…"
-                defaultValue={searchParams.q}
+                defaultValue={q}
                 className="
                   w-full h-10 bg-[#1a1a1a] border border-[#2a2a2a] pl-9 pr-4
                   text-[12px] text-[#f5f0e8] placeholder-[#6b6b6b]
