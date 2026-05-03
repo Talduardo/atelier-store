@@ -2,12 +2,13 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
   return {
-    title: `Produto ${params.id} — Atelier Store`,
+    title: `Produto ${id} — Atelier Store`,
   }
 }
 
@@ -42,7 +43,8 @@ const MOCK_RELATED = [
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price)
 
-export default function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params }: Props) {
+  await params // Next.js 15: params is a Promise
   const product = MOCK_PRODUCT
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
