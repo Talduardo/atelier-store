@@ -1,77 +1,68 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { loginWithEmail, sendMagicLink } from '@/lib/actions/auth'
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'email' | 'magic'>('email')
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  function handleEmailLogin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      const result = await loginWithEmail(formData)
+      if (result?.error) setMessage({ type: 'error', text: result.error })
+    })
+  }
+
+  function handleMagicLink(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    startTransition(async () => {
+      const result = await sendMagicLink(formData)
+      if (result?.error) setMessage({ type: 'error', text: result.error })
+      else if (result?.success) setMessage({ type: 'success', text: result.success })
+    })
+  }
 
   return (
     <div className="flex-1 flex pt-14">
-
-      {/* Left panel — decorative */}
+      {/* Decorative left panel */}
       <div className="hidden lg:flex w-[45%] bg-[#1a1a1a] border-r border-[#2a2a2a] relative overflow-hidden flex-col justify-end p-14">
-        {/* Grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 39px, #f5f0e8 39px, #f5f0e8 40px),
-              repeating-linear-gradient(90deg, transparent, transparent 39px, #f5f0e8 39px, #f5f0e8 40px)`
-          }}
-        />
-        {/* Copper accent */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#8a4d1e] via-[#d4843c] to-[#8a4d1e]" />
-        {/* Glow */}
         <div className="absolute bottom-20 right-0 w-80 h-80 bg-[#b5692a] opacity-[0.06] rounded-full blur-[80px]" />
-
-        {/* Quote */}
         <div className="relative">
           <div className="w-12 h-px bg-[#b5692a] mb-6" />
-          <blockquote
-            className="text-[32px] font-light text-[#f5f0e8] leading-tight mb-6"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          >
-            &ldquo;Objetos que
-            <br />
-            <em className="italic text-[#d4843c]">revelam</em>
-            <br />
-            quem você é.&rdquo;
+          <blockquote className="text-[32px] font-light text-[#f5f0e8] leading-tight mb-6"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+            &ldquo;Objetos que<br /><em className="italic text-[#d4843c]">revelam</em><br />quem você é.&rdquo;
           </blockquote>
-          <p className="text-[11px] tracking-[0.2em] text-[#6b6b6b] uppercase">
-            Atelier Store — Curated Living
-          </p>
+          <p className="text-[11px] tracking-[0.2em] text-[#6b6b6b] uppercase">Atelier Store — Curated Living</p>
         </div>
       </div>
 
-      {/* Right panel — form */}
+      {/* Form */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 lg:px-16 py-16">
         <div className="w-full max-w-[360px]">
-
           <div className="mb-8">
-            <h1
-              className="text-[34px] font-light text-[#f5f0e8] mb-2"
-              style={{ fontFamily: "'Cormorant Garamond', serif" }}
-            >
-              Bem-vindo de volta
-            </h1>
+            <h1 className="text-[34px] font-light text-[#f5f0e8] mb-2"
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}>Bem-vindo de volta</h1>
             <p className="text-[13px] text-[#6b6b6b]">
               Não tem conta?{' '}
-              <Link href="/register" className="text-[#b5692a] hover:text-[#d4843c] transition-colors">
-                Crie uma agora
-              </Link>
+              <Link href="/register" className="text-[#b5692a] hover:text-[#d4843c] transition-colors">Crie uma agora</Link>
             </p>
           </div>
 
           {/* Google */}
-          <button className="
-            w-full h-11 border border-[#2a2a2a] flex items-center justify-center gap-3 mb-6
-            text-[12px] text-[#d4cfc6] hover:border-[#b5692a] hover:bg-[#1a1a1a] transition-all
-          ">
+          <a href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${process.env.NEXT_PUBLIC_APP_URL}/auth/confirm`}
+            className="w-full h-11 border border-[#2a2a2a] flex items-center justify-center gap-3 mb-6 text-[12px] text-[#d4cfc6] hover:border-[#b5692a] hover:bg-[#1a1a1a] transition-all">
             <GoogleIcon />
             Continuar com Google
-          </button>
+          </a>
 
-          {/* Divider */}
           <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 h-px bg-[#2a2a2a]" />
             <span className="text-[10px] tracking-[0.2em] text-[#3a3a3a] uppercase">ou</span>
@@ -81,70 +72,48 @@ export default function LoginPage() {
           {/* Mode toggle */}
           <div className="flex border border-[#2a2a2a] mb-6 divide-x divide-[#2a2a2a]">
             {(['email', 'magic'] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`
-                  flex-1 h-9 text-[10px] tracking-[0.15em] uppercase transition-all
-                  ${mode === m ? 'bg-[#1a1a1a] text-[#d4cfc6]' : 'text-[#3a3a3a] hover:text-[#6b6b6b]'}
-                `}
-              >
+              <button key={m} onClick={() => { setMode(m); setMessage(null) }}
+                className={`flex-1 h-9 text-[10px] tracking-[0.15em] uppercase transition-all ${mode === m ? 'bg-[#1a1a1a] text-[#d4cfc6]' : 'text-[#3a3a3a] hover:text-[#6b6b6b]'}`}>
                 {m === 'email' ? 'Senha' : 'Magic Link'}
               </button>
             ))}
           </div>
 
-          {/* Form */}
+          {message && (
+            <div className={`text-[12px] px-4 py-3 mb-4 border ${message.type === 'error' ? 'border-[#e24b4a]/30 text-[#e24b4a] bg-[#e24b4a]/5' : 'border-[#6a9e5a]/30 text-[#6a9e5a] bg-[#6a9e5a]/5'}`}>
+              {message.text}
+            </div>
+          )}
+
           {mode === 'email' ? (
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
               <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-2">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-[#b5692a] transition-colors"
-                />
+                <label className="block text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-2">E-mail</label>
+                <input type="email" name="email" required autoComplete="email"
+                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-[#b5692a] transition-colors" />
               </div>
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b]">Senha</label>
-                  <Link href="/forgot-password" className="text-[10px] text-[#b5692a] hover:text-[#d4843c] transition-colors">
-                    Esqueci a senha
-                  </Link>
                 </div>
-                <input
-                  type="password"
-                  autoComplete="current-password"
-                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-[#b5692a] transition-colors"
-                />
+                <input type="password" name="password" required autoComplete="current-password"
+                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-[#b5692a] transition-colors" />
               </div>
-              <button
-                type="submit"
-                className="w-full h-11 bg-[#b5692a] text-[#f5f0e8] text-[11px] tracking-[0.2em] uppercase hover:bg-[#d4843c] transition-colors mt-2"
-              >
-                Entrar
+              <button type="submit" disabled={isPending}
+                className="w-full h-11 bg-[#b5692a] text-[#f5f0e8] text-[11px] tracking-[0.2em] uppercase hover:bg-[#d4843c] transition-colors disabled:opacity-60 mt-2">
+                {isPending ? 'Entrando...' : 'Entrar'}
               </button>
             </form>
           ) : (
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form onSubmit={handleMagicLink} className="space-y-4">
               <div>
-                <label className="block text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-2">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  placeholder="seu@email.com"
-                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] placeholder-[#3a3a3a] focus:outline-none focus:border-[#b5692a] transition-colors"
-                />
+                <label className="block text-[10px] tracking-[0.2em] uppercase text-[#6b6b6b] mb-2">E-mail</label>
+                <input type="email" name="email" required placeholder="seu@email.com" autoComplete="email"
+                  className="w-full h-11 bg-[#1a1a1a] border border-[#2a2a2a] px-4 text-[13px] text-[#f5f0e8] placeholder-[#3a3a3a] focus:outline-none focus:border-[#b5692a] transition-colors" />
               </div>
-              <button
-                type="submit"
-                className="w-full h-11 bg-[#b5692a] text-[#f5f0e8] text-[11px] tracking-[0.2em] uppercase hover:bg-[#d4843c] transition-colors"
-              >
-                Enviar link de acesso
+              <button type="submit" disabled={isPending}
+                className="w-full h-11 bg-[#b5692a] text-[#f5f0e8] text-[11px] tracking-[0.2em] uppercase hover:bg-[#d4843c] transition-colors disabled:opacity-60">
+                {isPending ? 'Enviando...' : 'Enviar link de acesso'}
               </button>
               <p className="text-[11px] text-[#6b6b6b] text-center leading-relaxed">
                 Vamos enviar um link mágico para o seu email. Nenhuma senha necessária.
@@ -152,17 +121,11 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Terms */}
           <p className="text-[10px] text-[#3a3a3a] text-center mt-8 leading-relaxed">
             Ao entrar, você concorda com os{' '}
-            <Link href="/terms" className="text-[#6b6b6b] hover:text-[#d4843c] transition-colors">
-              Termos de Uso
-            </Link>{' '}
-            e a{' '}
-            <Link href="/privacy" className="text-[#6b6b6b] hover:text-[#d4843c] transition-colors">
-              Política de Privacidade
-            </Link>
-            .
+            <Link href="/terms" className="text-[#6b6b6b] hover:text-[#d4843c] transition-colors">Termos de Uso</Link>
+            {' '}e a{' '}
+            <Link href="/privacy" className="text-[#6b6b6b] hover:text-[#d4843c] transition-colors">Política de Privacidade</Link>.
           </p>
         </div>
       </div>
