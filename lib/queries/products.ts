@@ -94,7 +94,7 @@ export async function getRelatedProducts(categoryId: string, excludeId: string, 
   return (data as ProductWithCategory[]) ?? []
 }
 
-export async function searchProducts(query: string, limit = 5): Promise<Product[]> {
+export async function searchProducts(query: string, limit = 5): Promise<Partial<Product>[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('products')
