@@ -58,9 +58,7 @@ export default async function AdminOrdersPage() {
                       {addr?.city && (
                         <p className="text-[11px] text-[#6b6b6b]">{addr.city}, {addr.state}</p>
                       )}
-                      <p className="text-[11px] text-[#3a3a3a] mt-0.5">
-                        {(order.order_items as unknown[])?.length ?? 0} {((order.order_items as unknown[])?.length ?? 0) === 1 ? 'item' : 'itens'}
-                      </p>
+
                     </div>
                     <span className="text-[13px] text-[#d4cfc6] font-medium">{formatPrice(order.total)}</span>
                     <StatusBadge status={order.status} orderId={order.id} label={statusLabel} color={statusColor} />
